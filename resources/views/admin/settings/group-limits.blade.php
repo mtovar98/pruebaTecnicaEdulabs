@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Cuotas por Grupo</title>
+  @vite(['resources/css/app.css','resources/js/app.js'])
+</head>
+<body class="min-h-screen bg-gray-100">
+  <div class="max-w-3xl mx-auto p-6 space-y-6">
+    <h1 class="text-2xl font-bold">Cuotas por Grupo</h1>
+
+    @if(session('ok'))
+      <div class="p-3 bg-green-100 text-green-800 rounded">{{ session('ok') }}</div>
+    @endif
+
+    <div class="bg-white p-4 rounded shadow space-y-3">
+      <h2 class="font-semibold">Asignar / Actualizar cuota</h2>
+      <form method="POST" action="{{ route('admin.settings.group.save') }}" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        @csrf
+        <div>
+          <label class="text-sm">Grupo</label>
+          <select name="group_id" class="border rounded px-3 py-2 w-full" required>
+            @foreach($groups as $g)
+              <option value="{{ $g->id }}">{{ $g->name }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div>
+          <label class="text-sm">Cuota (MB)</label>
+          <input name="quota_mb" type="number" min="1" max="20480" class="border rounded px-3 py-2 w-full" placeholder="(vacío = heredar global)">
+        </div>
+        <div class="flex items-end">
+          <button class="px-4 py-2 bg-blue-600 text-white rounded w-full">Guardar</button>
+        </div>
+      </form>
+      @error('group_id') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
+      @error('quota_mb') <p class="text-red-600 text-sm">{{ $message }}</p> @enderror
+    </div>
+
+    <div class="bg-white p-4 rounded shadow space-y-2">
+      <h2 class="font-semibold">Grupos con cuota específica</h2>
+      @forelse($limits as $lim)
+        <div class="flex items-center justify-between border-b last:border-0 py-2">
+          <div>
+            <strong>{{ $lim->group->name }}</strong>
+            <span class="text-gray-600">— Cuota: {{ $lim->quota_mb ? $lim->quota_mb.' MB' : 'Hereda global' }}</span>
+          </div>
+          <form method="POST" action="{{ route('admin.settings.group.delete', $lim) }}">
+            @csrf @method('DELETE')
+            <button class="text-red-600 hover:underline">Eliminar cuota</button>
+          </form>
+        </div>
+      @empty
+        <p class="text-gray-600"><em>No hay grupos con cuota específica. Todos heredan la global.</em></p>
+      @endforelse
+    </div>
+
+    <div class="flex gap-4">
+      <a href="{{ route('admin.settings.index') }}" class="text-blue-600 underline">← Configuración global</a>
+    </div>
+  </div>
+</body>
+</html>
